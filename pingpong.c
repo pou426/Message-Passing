@@ -6,12 +6,9 @@ void mpi_ping_pong(int nmsg, int rank) {
 	int nturns = 100000;
   int temp_nturns = nturns;
 
-  int message[] = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-  								 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-  								 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
   int buf[nmsg];
   for (int i = 0; i < nmsg; i++) {
-  	buf[i] = message[i];
+  	buf[i] = i;
   }
 
   double tstart, tstop;
@@ -20,18 +17,17 @@ void mpi_ping_pong(int nmsg, int rank) {
   if (rank == 0) {
   	// MPI_Ssend(buf, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
   	while (nturns > 0) {
-  		MPI_Ssend(buf, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+  		MPI_Ssend(buf, nmsg, MPI_INT, 1, 0, MPI_COMM_WORLD);
   		// printf("rank [0]: Ping.\n");
-  		MPI_Recv(&buf, 1, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  		MPI_Recv(&buf, nmsg, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   		nturns--;
   	}
   }
 
   if (rank == 1) {
-  	int recv_buf[6];
   	while (nturns > 0) {
-  		MPI_Recv(&recv_buf, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  		MPI_Ssend(recv_buf, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+  		MPI_Recv(&buf, nmsg, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  		MPI_Ssend(buf, nmsg, MPI_INT, 0, 0, MPI_COMM_WORLD);
   		// printf("rank [1]: Pong.\n");
   		nturns--;
   	}
@@ -54,7 +50,7 @@ int main(void) {
   int size; 
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  int nmsg[] = {0, 10, 20, 30};
+  int nmsg[] = {0, 100, 1000, 10000};
   for (int i = 0; i < sizeof(nmsg) / sizeof(nmsg[0]); i++) {
 		mpi_ping_pong(nmsg[i], rank);
   }
