@@ -74,11 +74,39 @@ int main(void) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-	// Replace irecv_ring() with isend_ring()
-  int value = irecv_ring(rank, size);
-  printf("Rank %d: value=%d\n", rank, value);
+  double tstart, tstop;
+  MPI_Barrier(MPI_COMM_WORLD);  // Line up at the start line
+  tstart = MPI_Wtime();         // Fire the gun and start the clock
+  int value;
+  // Put it in a loop to make it last longer
+  for (int i = 0; i < 10000000; i++) {
+  	// Replace irecv_ring() with isend_ring()
+  	value = irecv_ring(rank, size);
+  }
+	MPI_Barrier(MPI_COMM_WORLD);  // Wait for everyone to finish
+  tstop = MPI_Wtime();          // Stop the clock
+  printf("Rank %d: value=%d time=%fs\n", rank, value, tstop-tstart);
 
 	MPI_Finalize();
 
   return 0;
 }
+
+
+// PERFORMANCE NOTES
+// $ mpirun -n 1 aroundaring
+// Rank 0: value=1 time=0.060934s
+// $ mpirun -n 2 aroundaring
+// Rank 0: value=5 time=6.747883s
+// Rank 1: value=5 time=6.747876s
+// $ mpirun -n 3 aroundaring
+// Rank 0: value=14 time=15.333231s
+// Rank 1: value=14 time=15.333233s
+// Rank 2: value=14 time=15.333259s
+// $ mpirun -n 4 aroundaring
+// Rank 1: value=30 time=35.051162s
+// Rank 2: value=30 time=35.051238s
+// Rank 3: value=30 time=35.051163s
+// Rank 0: value=30 time=35.051246s
+
+
